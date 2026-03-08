@@ -6,6 +6,14 @@ set -euo pipefail
 REPO="INS-JVidal/code-primer"
 INSTALL_DIR="${HOME}/.local/bin"
 
+echo ""
+echo '    ______          __        ____       _                    '
+echo '   / ____/___  ____/ /__     / __ \_____(_)___ ___  ___  _____'
+echo '  / /   / __ \/ __  / _ \   / /_/ / ___/ / __ `__ \/ _ \/ ___/'
+echo ' / /___/ /_/ / /_/ /  __/  / ____/ /  / / / / / / /  __/ /    '
+echo ' \____/\____/\__,_/\___/  /_/   /_/  /_/_/ /_/ /_/\___/_/     '
+echo ""
+
 # Detect OS and architecture
 OS="$(uname -s)"
 ARCH="$(uname -m)"

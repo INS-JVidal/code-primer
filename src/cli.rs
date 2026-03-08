@@ -7,17 +7,24 @@ use clap::{Parser, Subcommand};
     name = "code-primer",
     version,
     about = "Prime your AI coding assistant with file-level codebase understanding",
-    long_about = "code-primer generates file-level natural language summaries of source code \
-                  by parsing functions, types, and constants via tree-sitter and sending their \
-                  signatures to an LLM. Output is a single code-primer.json per project.\n\n\
-                  The goal: prime AI coding assistants with codebase understanding so they need \
-                  fewer exploratory tool calls.\n\n\
-                  Typical workflow:\n  \
-                  1. code-primer init <project>       # set up output dir, CLAUDE.md, slash command\n  \
-                  2. code-primer generate <project>   # create summaries (calls LLM)\n  \
-                  3. code-primer status <project>     # check for stale summaries\n  \
-                  4. code-primer refresh <project>    # re-summarize only changed files\n\n\
-                  Requires claude CLI (Max/Pro subscription) or ANTHROPIC_API_KEY."
+    before_long_help = "\
+  ______          __        ____       _                    \n\
+ / ____/___  ____/ /__     / __ \\_____(_)___ ___  ___  _____\n\
+/ /   / __ \\/ __  / _ \\   / /_/ / ___/ / __ `__ \\/ _ \\/ ___/\n\
+/ /___/ /_/ / /_/ /  __/  / ____/ /  / / / / / / /  __/ /    \n\
+\\____/\\____/\\__,_/\\___/  /_/   /_/  /_/_/ /_/ /_/\\___/_/     ",
+    long_about = "\
+code-primer generates file-level natural language summaries of source code \
+by parsing functions, types, and constants via tree-sitter and sending their \
+signatures to an LLM. Output is a single code-primer.json per project.\n\n\
+The goal: prime AI coding assistants with codebase understanding so they need \
+fewer exploratory tool calls.\n\n\
+Typical workflow:\n  \
+1. code-primer init <project>       # set up output dir, CLAUDE.md, slash command\n  \
+2. code-primer generate <project>   # create summaries (calls LLM)\n  \
+3. code-primer status <project>     # check for stale summaries\n  \
+4. code-primer refresh <project>    # re-summarize only changed files\n\n\
+Requires claude CLI (Max/Pro subscription) or ANTHROPIC_API_KEY."
 )]
 pub struct Cli {
     #[command(subcommand)]

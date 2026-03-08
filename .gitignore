@@ -1,2 +1,21 @@
 /target
 code-primer-*/
+
+# Local Claude Code config (per-user, not part of distribution)
+.claude/
+
+# Old Python artifacts
+__pycache__/
+*.egg-info/
+dist/
+*.pyc
+
+# Editor
+.vscode/
+.idea/
+*.swp
+*~
+
+# OS
+.DS_Store
+Thumbs.db

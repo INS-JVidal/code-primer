@@ -78,22 +78,36 @@ pub fn diff_files(
             }
             Some(old_entry) => {
                 // Check mtime first as fast-path
-                let metadata = fs::metadata(&full_path)?;
+                let metadata = match fs::metadata(&full_path) {
+                    Ok(m) => m,
+                    Err(e) => {
+                        eprintln!("  WARN: cannot stat {rel_path}: {e}");
+                        changed.push(rel_path.clone());
+                        continue;
+                    }
+                };
                 let mtime = metadata
-                    .modified()?
-                    .duration_since(UNIX_EPOCH)
-                    .unwrap_or_default()
-                    .as_secs();
+                    .modified()
+                    .ok()
+                    .and_then(|t| t.duration_since(UNIX_EPOCH).ok())
+                    .map(|d| d.as_secs())
+                    .unwrap_or(0);
 
                 if mtime == old_entry.mtime {
                     unchanged.push(rel_path.clone());
                 } else {
                     // Mtime changed — verify with hash
-                    let entry = compute_entry(&full_path)?;
-                    if entry.sha256 == old_entry.sha256 {
-                        unchanged.push(rel_path.clone());
-                    } else {
-                        changed.push(rel_path.clone());
+                    match compute_entry(&full_path) {
+                        Ok(entry) if entry.sha256 == old_entry.sha256 => {
+                            unchanged.push(rel_path.clone());
+                        }
+                        Ok(_) => {
+                            changed.push(rel_path.clone());
+                        }
+                        Err(e) => {
+                            eprintln!("  WARN: cannot hash {rel_path}: {e}");
+                            changed.push(rel_path.clone());
+                        }
                     }
                 }
             }

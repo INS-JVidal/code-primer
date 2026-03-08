@@ -1,73 +1,92 @@
+mod cli;
 mod config;
 mod meta;
 mod parser;
 mod pipeline;
+mod report;
 mod summarizer;
 
-use std::path::PathBuf;
 use std::process;
 
 use clap::Parser;
 
-#[derive(Parser)]
-#[command(name = "code-primer", version, about = "Prime your AI coding assistant with file-level codebase understanding")]
-struct Cli {
-    /// Project directory to analyze
-    project_dir: PathBuf,
+use cli::{Cli, Commands, SourceArgs};
 
-    /// Output directory (default: literate-code-<project>/ next to project)
-    #[arg(short, long)]
-    output: Option<PathBuf>,
-
-    /// Model name
-    #[arg(long, default_value = "claude-haiku-4-5-20251001")]
-    model: String,
-
-    /// File glob patterns to include (repeatable)
-    #[arg(long = "include")]
-    include_patterns: Vec<String>,
-
-    /// File glob patterns to exclude (repeatable)
-    #[arg(long = "exclude")]
-    exclude_patterns: Vec<String>,
-
-    /// Parse and show units without calling LLM
-    #[arg(long)]
-    dry_run: bool,
-
-    /// Skip files already in literate-summaries.json
-    #[arg(long, conflicts_with = "refresh")]
-    resume: bool,
-
-    /// Re-summarize only changed/new files, prune deleted
-    #[arg(long, conflicts_with = "resume")]
-    refresh: bool,
-
-    /// Parallel LLM requests
-    #[arg(long, default_value_t = 4)]
-    concurrency: usize,
+impl SourceArgs {
+    fn into_config(self) -> anyhow::Result<config::Config> {
+        let mut cfg = config::Config::new(self.project_dir, self.output)?;
+        cfg.model = self.model;
+        cfg.dry_run = self.dry_run;
+        cfg.concurrency = self.concurrency;
+        cfg.force_api = self.api;
+        if !self.include_patterns.is_empty() {
+            cfg.include_patterns = self.include_patterns;
+        }
+        if !self.exclude_patterns.is_empty() {
+            cfg.exclude_patterns = self.exclude_patterns;
+        }
+        Ok(cfg)
+    }
 }
 
 #[tokio::main]
 async fn main() {
-    let cli = Cli::parse();
-
-    let mut cfg = config::Config::new(cli.project_dir, cli.output);
-    cfg.model = cli.model;
-    cfg.dry_run = cli.dry_run;
-    cfg.resume = cli.resume;
-    cfg.refresh = cli.refresh;
-    cfg.concurrency = cli.concurrency;
-
-    if !cli.include_patterns.is_empty() {
-        cfg.include_patterns = cli.include_patterns;
-    }
-    if !cli.exclude_patterns.is_empty() {
-        cfg.exclude_patterns = cli.exclude_patterns;
-    }
-
-    if let Err(e) = pipeline::run(&cfg).await {
+    if let Err(e) = run().await {
         eprintln!("ERROR: {e:#}");
         process::exit(1);
+    }
+}
+
+async fn run() -> anyhow::Result<()> {
+    let cli = Cli::parse();
+
+    match cli.command {
+        Commands::Init { project_dir, output } => {
+            pipeline::cmd_init(&project_dir, output.as_deref())
+        }
+
+        Commands::Generate { args, resume } => {
+            let mut cfg = args.into_config()?;
+            cfg.resume = resume;
+            cfg.refresh = false;
+            pipeline::cmd_generate(&cfg).await
+        }
+
+        Commands::Refresh { args } => {
+            let mut cfg = args.into_config()?;
+            cfg.refresh = true;
+            pipeline::cmd_generate(&cfg).await
+        }
+
+        Commands::Status {
+            project_dir,
+            output,
+            include_patterns,
+            exclude_patterns,
+        } => {
+            let mut cfg = config::Config::new(project_dir, output)?;
+            if !include_patterns.is_empty() {
+                cfg.include_patterns = include_patterns;
+            }
+            if !exclude_patterns.is_empty() {
+                cfg.exclude_patterns = exclude_patterns;
+            }
+            pipeline::cmd_status(&cfg)
+        }
+
+        Commands::Verify { project_dir, output } => {
+            let cfg = config::Config::new(project_dir, output)?;
+            pipeline::cmd_verify(&cfg)
+        }
+
+        Commands::Clean { project_dir, output } => {
+            let cfg = config::Config::new(project_dir, output)?;
+            pipeline::cmd_clean(&cfg)
+        }
+
+        Commands::Uninstall { project_dir, output } => {
+            let cfg = config::Config::new(project_dir, output)?;
+            pipeline::cmd_uninstall(&cfg)
+        }
     }
 }

@@ -35,3 +35,7 @@ globset = "0.4"
 
 # Misc
 hex = "0.4"
+
+[build-dependencies]
+clap = { version = "4", features = ["derive"] }
+clap_mangen = "0.2"

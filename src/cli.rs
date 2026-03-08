@@ -34,7 +34,8 @@ pub struct Cli {
 /// Shared arguments for commands that discover and process source files.
 #[derive(clap::Args)]
 pub struct SourceArgs {
-    /// Project directory to analyze
+    /// Project directory to analyze (default: current directory)
+    #[arg(default_value = ".")]
     pub project_dir: PathBuf,
 
     /// Output directory (default: code-primer-<project>/ next to project)
@@ -70,7 +71,8 @@ pub struct SourceArgs {
 pub enum Commands {
     /// Initialize code-primer for a project (output dir, CLAUDE.md snippet, slash command)
     Init {
-        /// Project directory
+        /// Project directory (default: current directory)
+        #[arg(default_value = ".")]
         project_dir: PathBuf,
 
         /// Output directory (default: code-primer-<project>/ next to project)
@@ -96,7 +98,8 @@ pub enum Commands {
 
     /// Check if project needs a refresh (detect file changes, no LLM calls)
     Status {
-        /// Project directory
+        /// Project directory (default: current directory)
+        #[arg(default_value = ".")]
         project_dir: PathBuf,
 
         /// Output directory
@@ -114,7 +117,8 @@ pub enum Commands {
 
     /// Verify integrity of generated summaries (validate JSON, check hashes)
     Verify {
-        /// Project directory
+        /// Project directory (default: current directory)
+        #[arg(default_value = ".")]
         project_dir: PathBuf,
 
         /// Output directory
@@ -124,7 +128,8 @@ pub enum Commands {
 
     /// Remove generated output directory
     Clean {
-        /// Project directory
+        /// Project directory (default: current directory)
+        #[arg(default_value = ".")]
         project_dir: PathBuf,
 
         /// Output directory
@@ -134,7 +139,8 @@ pub enum Commands {
 
     /// Remove all code-primer artifacts (clean + CLAUDE.md snippet + slash command)
     Uninstall {
-        /// Project directory
+        /// Project directory (default: current directory)
+        #[arg(default_value = ".")]
         project_dir: PathBuf,
 
         /// Output directory

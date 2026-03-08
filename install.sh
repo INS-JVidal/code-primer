@@ -50,11 +50,15 @@ fi
 
 echo "Detected: ${OS_NAME}-${ARCH_NAME}"
 
-# Get latest release URL
+# Get latest release info
 RELEASE_URL="https://api.github.com/repos/${REPO}/releases/latest"
 echo "Fetching latest release..."
 
-DOWNLOAD_URL=$(curl -fsSL "$RELEASE_URL" \
+RELEASE_JSON=$(curl -fsSL "$RELEASE_URL")
+RELEASE_TAG=$(echo "$RELEASE_JSON" | grep '"tag_name"' | head -1 | cut -d '"' -f 4)
+echo "Release: ${RELEASE_TAG}"
+
+DOWNLOAD_URL=$(echo "$RELEASE_JSON" \
     | grep "browser_download_url.*${ASSET_NAME}" \
     | head -1 \
     | cut -d '"' -f 4)

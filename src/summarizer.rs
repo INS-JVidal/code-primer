@@ -70,10 +70,13 @@ impl Summarizer {
         }
     }
 
-    pub fn backend_name(&self) -> &'static str {
+    pub fn backend_name(&self) -> String {
         match &self.backend {
-            Backend::ClaudeCli { .. } => "claude-cli (subscription)",
-            Backend::Api(_) => "api (ANTHROPIC_API_KEY)",
+            Backend::ClaudeCli { .. } => {
+                let version = claude_version().unwrap_or_else(|| "unknown".into());
+                format!("claude CLI v{version} (subscription auth)")
+            }
+            Backend::Api(_) => "direct API (ANTHROPIC_API_KEY)".into(),
         }
     }
 
@@ -181,6 +184,22 @@ impl Summarizer {
 }
 
 // ── Claude CLI backend ─────────────────────────────────────────────
+
+fn claude_version() -> Option<String> {
+    let output = std::process::Command::new("claude")
+        .arg("--version")
+        .output()
+        .ok()?;
+    if output.status.success() {
+        let raw = String::from_utf8_lossy(&output.stdout).trim().to_string();
+        // Output is typically "claude <version>" or just "<version>"
+        let version = raw.strip_prefix("claude ").unwrap_or(&raw);
+        if !version.is_empty() {
+            return Some(version.to_string());
+        }
+    }
+    None
+}
 
 fn which_claude() -> Option<std::path::PathBuf> {
     // Check if `claude` is on PATH and executable.
